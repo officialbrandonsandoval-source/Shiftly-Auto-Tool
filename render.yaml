@@ -3,10 +3,14 @@ services:
     name: pons-api
     runtime: node
     plan: starter
-    buildCommand: cd apps/api && pnpm install && pnpm run build
-    startCommand: cd apps/api && pnpm start
+    region: oregon
+    buildCommand: |
+      corepack enable
+      pnpm install --frozen-lockfile
+      pnpm --filter pons-api run build
+    startCommand: |
+      pnpm --filter pons-api start
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3001
