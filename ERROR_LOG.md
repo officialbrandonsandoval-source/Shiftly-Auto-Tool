@@ -97,3 +97,30 @@ pnpm -C apps/mobile start --web
 
 **Commit/PR:**  
 - <add link>
+
+---
+
+### [2026-01-26] @types/cors missing
+**Context:** Building API (`pnpm -C apps/api build`) for Slice 2  
+**Error message (verbatim):**
+```
+error TS7016: Could not find a declaration file for module 'cors'
+```
+**Root cause:**  
+- @types/cors not in devDependencies despite cors being used
+
+**Fix applied:**  
+1) Ran `pnpm -C apps/api add -D @types/cors`  
+2) Rebuilt with `pnpm -C apps/api build` → success  
+
+**Verification:**  
+- Command(s):
+  - `pnpm -C apps/api build`
+- Expected result:
+  - No TypeScript errors, dist/ folder generated
+
+**Prevention (optional):**  
+- Always add @types/* packages for npm modules with TypeScript usage
+
+**Commit/PR:**  
+- Included in Slice 2 commit

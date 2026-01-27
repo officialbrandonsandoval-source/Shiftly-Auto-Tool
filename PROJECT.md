@@ -86,7 +86,7 @@ Ship an MVP that **100% works with dealer inventory feeds** and delivers a **mob
 
 ---
 
-### Slice 2 — Backend skeleton (apps/api) ⬜
+### Slice 2 — Backend skeleton (apps/api) ✅
 **Goal:** API exists locally + deployable.  
 **Deliverables:**
 - `apps/api` with Express + TS
@@ -96,13 +96,14 @@ Ship an MVP that **100% works with dealer inventory feeds** and delivers a **mob
 - Local: `pnpm -C apps/api dev` + `GET /health` is 200
 **Test Evidence:**
 - Command(s):
-  - `pnpm -C apps/api dev`
-  - `curl http://localhost:3001/health`
+  - `pnpm -C apps/api dev` → starts successfully on port 3001
+  - `curl http://localhost:3001/health` → `{"status":"ok","timestamp":"2026-01-26T..."}`
+  - Built with: `pnpm -C apps/api build` → success (dist/ generated)
 
-**Status:** ⬜ Not started  
-**Last updated:** YYYY-MM-DD  
+**Status:** ✅ Done  
+**Last updated:** 2026-01-26  
 **Owner:** Brandon  
-**Blocked by:** None
+**Notes:** Fixed @types/cors issue. Express + CORS + JSON middleware configured.
 
 ---
 
