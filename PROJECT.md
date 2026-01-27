@@ -107,7 +107,7 @@ Ship an MVP that **100% works with dealer inventory feeds** and delivers a **mob
 
 ---
 
-### Slice 3 — Auth (JWT) ⬜
+### Slice 3 — Auth (JWT) ✅
 **Goal:** Secure user sessions.  
 **Deliverables:**
 - `POST /auth/login`
@@ -117,13 +117,17 @@ Ship an MVP that **100% works with dealer inventory feeds** and delivers a **mob
 - Mobile logs in and calls `/me`
 **Test Evidence:**
 - Command(s):
-  - `curl -X POST ... /auth/login`
-  - `curl -H "Authorization: Bearer <token>" ... /me`
+  - `curl -X POST http://localhost:3001/auth/login -H "Content-Type: application/json" -d '{"email":"test@dealer.com"}'`
+  - `curl -H "Authorization: Bearer <token>" http://localhost:3001/me`
+- Result:
+  - Login returns JWT token
+  - `/me` returns `{"user":{"id":"test@dealer.com"}}`
+  - Missing token returns 401 error
 
-**Status:** ⬜ Not started  
-**Last updated:** YYYY-MM-DD  
+**Status:** ✅ Done  
+**Last updated:** 2026-01-26  
 **Owner:** Brandon  
-**Blocked by:** Slice 2
+**Notes:** JWT_SECRET uses env var with dev default; uses jsonwebtoken package; token expires in 24h
 
 ---
 

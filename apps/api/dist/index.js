@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { generateToken, authMiddleware } from './auth.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 // Middleware
@@ -13,9 +14,25 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
     res.json({ message: 'PONS Auto API', version: '0.1.0' });
 });
+// Auth routes
+app.post('/auth/login', (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ error: 'Email required' });
+    }
+    // Generate token (in real app, validate credentials)
+    const token = generateToken(email);
+    res.json({ token, user: { email } });
+});
+// Protected route: get current user
+app.get('/me', authMiddleware, (req, res) => {
+    res.json({ user: { id: req.userId } });
+});
 // Start server
 app.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);
     console.log(`✓ Health check: http://localhost:${PORT}/health`);
+    console.log(`✓ Auth: POST http://localhost:${PORT}/auth/login`);
+    console.log(`✓ Protected: GET http://localhost:${PORT}/me (requires token)`);
 });
 //# sourceMappingURL=index.js.map
