@@ -1,5 +1,5 @@
 /**
- * API client for PONS Auto backend
+ * API client for Shiftly Auto Tool backend
  */
 
 import { Vehicle, VehicleListResponse, AuthResponse } from '../types'

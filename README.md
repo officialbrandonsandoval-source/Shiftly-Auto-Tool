@@ -1,2 +1,2 @@
-# PONS-Auto
-AI-powered vehicle inventory publisher for car dealerships
+# Shiftly Auto Tool
+Mobile-first vehicle inventory platform for car dealerships

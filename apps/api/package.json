@@ -1,7 +1,7 @@
 {
-  "name": "pons-api",
+  "name": "shiftly-api",
   "version": "0.1.0",
-  "description": "PONS Auto — backend API for inventory management",
+  "description": "Shiftly Auto Tool — backend API for inventory management",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {

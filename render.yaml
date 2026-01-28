@@ -1,15 +1,15 @@
 services:
   - type: web
-    name: pons-api
+    name: shiftly-api
     runtime: node
     plan: starter
     region: oregon
     buildCommand: |
       corepack enable
       pnpm install --frozen-lockfile
-      pnpm --filter pons-api run build
+      pnpm --filter shiftly-api run build
     startCommand: |
-      pnpm --filter pons-api start
+      pnpm --filter shiftly-api start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

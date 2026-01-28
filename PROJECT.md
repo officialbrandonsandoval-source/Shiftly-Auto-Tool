@@ -1,10 +1,10 @@
-# PONS Auto — Mobile-First Inventory Platform (iOS/Android/Web)
+# Shiftly Auto Tool — Mobile-First Inventory Platform (iOS/Android/Web)
 
 ## North Star
 Ship an MVP that **100% works with dealer inventory feeds** and delivers a **mobile-first listing workflow** across **iOS, Android, and Web** from a **single monorepo**.
 
 ## Repo
-- Single monorepo: `PONS-Auto`
+- Single monorepo: `Shiftly-Auto-Tool`
 - Apps:
   - `apps/mobile` (Expo + Tamagui: iOS/Android/Web)
   - `apps/api` (Render backend API + worker)
