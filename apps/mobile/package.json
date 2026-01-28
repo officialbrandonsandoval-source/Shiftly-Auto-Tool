@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "prebuild": "expo prebuild"
   },
   "dependencies": {
     "@react-navigation/native": "^7.1.28",
@@ -21,6 +22,7 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@expo/cli": "^54.0.22",
     "@types/react": "~19.1.0",
     "typescript": "~5.9.2"
   },
