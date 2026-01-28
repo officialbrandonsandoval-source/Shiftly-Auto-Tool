@@ -5,7 +5,7 @@
 import { Vehicle, VehicleListResponse, AuthResponse } from '../types'
 
 // In production, use environment variable
-const API_BASE_URL = 'http://localhost:3001'
+const API_BASE_URL = 'https://pons-api-rm9k.onrender.com'
 
 let authToken: string | null = null
 
