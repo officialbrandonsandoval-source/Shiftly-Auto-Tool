@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c2374ff5-aa6e-405b-a06a-89cb13b161ab"
+      }
+    },
+    "owner": "bsandoval24"
   }
 }
