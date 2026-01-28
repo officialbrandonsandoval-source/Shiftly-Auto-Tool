@@ -4,13 +4,20 @@
   "description": "Shiftly Auto Tool - Mobile-First Inventory Platform",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "notion:pr": "tsx scripts/notion/sync_pr_to_notion.ts",
+    "notion:ci": "tsx scripts/notion/log_ci_failure_to_notion.ts",
+    "notion:deploy": "tsx scripts/notion/log_deploy_to_notion.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.20.0",
   "devDependencies": {
-    "turbo": "^2.7.6"
+    "@notionhq/client": "^2.2.15",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "turbo": "^2.7.6",
+    "typescript": "^5.7.3"
   }
 }
