@@ -14,6 +14,7 @@ import { syncProviderConnection, getAdapter } from './sync.js'
 import { generateListingPackage } from './listing.js'
 import { correlationIdMiddleware, getCorrelationId, RequestWithCorrelation } from './correlation.js'
 import { getSyncLogsByConnection, getSyncLogsByDealer, getLastSyncStatus } from './syncLogs.js'
+import { seedTestVehicles } from './seedData.js'
 
 const app = express()
 
@@ -299,4 +300,9 @@ app.get('/diagnostics/sync-status/:connectionId', authMiddleware as any, (req: A
 app.listen(PORT, HOST, () => {
   console.log(`✓ Server running on http://${HOST}:${PORT}`)
   console.log(`✓ Health check: http://${HOST}:${PORT}/health`)
+  
+  // Seed test data in development
+  if (process.env.NODE_ENV !== 'production') {
+    seedTestVehicles()
+  }
 })
