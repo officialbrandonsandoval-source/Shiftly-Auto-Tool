@@ -35,6 +35,7 @@ export interface Vehicle {
   
   // Photos
   photos?: string[] // Array of image URLs
+
   
   // Status
   status: 'available' | 'sold' | 'pending'
