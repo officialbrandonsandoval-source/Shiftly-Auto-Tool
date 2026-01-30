@@ -1,7 +1,12 @@
 /**
  * Listing package generator - creates export-ready content from a vehicle
  * Formats vehicle data for posting to classified sites, social, etc.
+ * Includes AI-generated variations with platform-specific optimization
  */
+import { generateListingVariations } from './ai/claudeClient.js';
+import crypto from 'crypto';
+// Cache of generated listings (in production, use DB)
+const generatedListings = new Map();
 /**
  * Generate a listing package from a vehicle
  */
@@ -104,5 +109,53 @@ function formatPrice(price) {
 }
 function formatMileage(mileage) {
     return new Intl.NumberFormat('en-US').format(mileage) + ' miles';
+}
+/**
+ * Generate AI-optimized listing variations for a vehicle
+ * Returns platform-specific copy (Facebook, Craigslist) + keywords + photo ranking
+ */
+export async function generateAIListingVariations(vehicle) {
+    const basePackage = generateListingPackage(vehicle);
+    const claudeOptions = {
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        price: vehicle.price,
+        mileage: vehicle.mileage,
+        condition: vehicle.condition,
+        description: vehicle.description,
+        features: vehicle.features,
+        transmission: vehicle.transmission,
+        fuelType: vehicle.fuelType,
+        vin: vehicle.vin,
+    };
+    // Generate with Claude
+    const variations = await generateListingVariations(claudeOptions);
+    const id = crypto.randomUUID();
+    const aiListing = {
+        id,
+        vehicleId: vehicle.id,
+        facebook: variations.facebook,
+        craigslist: variations.craigslist,
+        keywords: variations.keywords,
+        photoRanking: variations.photoRanking,
+        generatedAt: new Date(),
+        baseListingPackage: basePackage,
+    };
+    // Cache it
+    generatedListings.set(id, aiListing);
+    return aiListing;
+}
+/**
+ * Get a previously generated AI listing
+ */
+export function getAIListing(listingId) {
+    return generatedListings.get(listingId) || null;
+}
+/**
+ * Get all AI listings for a vehicle
+ */
+export function getAIListingsByVehicle(vehicleId) {
+    return Array.from(generatedListings.values()).filter((l) => l.vehicleId === vehicleId);
 }
 //# sourceMappingURL=listing.js.map

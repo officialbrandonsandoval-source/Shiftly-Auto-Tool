@@ -1,0 +1,299 @@
+/**
+ * Seed data for development and testing
+ * Populates the in-memory database with sample vehicles
+ */
+
+import { upsertVehicle } from './vehicles.js'
+
+export function seedTestVehicles() {
+  console.log('[Seed] Adding test vehicle data...')
+
+  const dealerId = 'dealer-001'
+  const providerConnectionId = 'conn-mock-001'
+  const now = new Date()
+
+  // Vehicle 1: 2024 Tesla Model 3
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'tesla-001',
+    providerType: 'mock',
+    vin: '5YJ3E1EA9PF123456',
+    year: 2024,
+    make: 'Tesla',
+    model: 'Model 3',
+    trim: 'Long Range',
+    mileage: 5420,
+    price: 42990,
+    condition: 'used',
+    bodyType: 'Sedan',
+    transmission: 'Automatic',
+    fuelType: 'Electric',
+    exteriorColor: 'Pearl White',
+    interiorColor: 'Black',
+    description: 'Like-new Tesla Model 3 Long Range with Autopilot, premium sound system, and glass roof. One owner, meticulously maintained.',
+    features: [
+      'Autopilot',
+      'Premium Audio',
+      'Glass Roof',
+      'Heated Seats',
+      'Navigation',
+      'Backup Camera',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800',
+      'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800',
+    ],
+    status: 'available',
+    lastSyncedAt: now,
+  })
+
+  // Vehicle 2: 2023 Ford F-150
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'ford-001',
+    providerType: 'mock',
+    vin: '1FTFW1E85NFC12345',
+    year: 2023,
+    make: 'Ford',
+    model: 'F-150',
+    trim: 'Lariat',
+    mileage: 12850,
+    price: 54995,
+    condition: 'used',
+    bodyType: 'Truck',
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    exteriorColor: 'Oxford White',
+    interiorColor: 'Black Leather',
+    description: 'Powerful F-150 Lariat with 3.5L EcoBoost V6, towing package, and premium interior. Perfect for work or play.',
+    features: [
+      '3.5L EcoBoost V6',
+      'Towing Package',
+      'Leather Seats',
+      'Heated/Cooled Seats',
+      'Apple CarPlay',
+      'Blind Spot Monitoring',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800',
+    ],
+    status: 'available',
+    lastSyncedAt: now,
+  })
+
+  // Vehicle 3: 2022 Honda Civic
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'honda-001',
+    providerType: 'mock',
+    vin: '2HGFE2F54NH123456',
+    year: 2022,
+    make: 'Honda',
+    model: 'Civic',
+    trim: 'Sport',
+    mileage: 18500,
+    price: 24995,
+    condition: 'used',
+    bodyType: 'Sedan',
+    transmission: 'CVT',
+    fuelType: 'Gasoline',
+    exteriorColor: 'Rallye Red',
+    interiorColor: 'Black Cloth',
+    description: 'Sporty and fuel-efficient Civic Sport with low mileage. Great commuter car with Honda reliability.',
+    features: [
+      'Sport Wheels',
+      'Honda Sensing',
+      'Apple CarPlay',
+      'Android Auto',
+      'Adaptive Cruise Control',
+      'Lane Keep Assist',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800',
+    ],
+    status: 'available',
+    lastSyncedAt: now,
+  })
+
+  // Vehicle 4: 2025 BMW X5
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'bmw-001',
+    providerType: 'mock',
+    vin: '5UXCR6C01M9S12345',
+    year: 2025,
+    make: 'BMW',
+    model: 'X5',
+    trim: 'xDrive40i',
+    mileage: 1250,
+    price: 68900,
+    condition: 'certified',
+    bodyType: 'SUV',
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    exteriorColor: 'Phytonic Blue',
+    interiorColor: 'Cognac Leather',
+    description: 'Nearly-new BMW X5 with premium luxury package. Certified Pre-Owned with warranty remaining.',
+    features: [
+      'Premium Package',
+      'Panoramic Moonroof',
+      'Harman Kardon Audio',
+      'Heated/Cooled Seats',
+      'Heads-Up Display',
+      'Parking Assist',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
+    ],
+    status: 'available',
+    lastSyncedAt: now,
+  })
+
+  // Vehicle 5: 2023 Toyota Camry (SOLD)
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'toyota-001',
+    providerType: 'mock',
+    vin: '4T1G11AK5PU123456',
+    year: 2023,
+    make: 'Toyota',
+    model: 'Camry',
+    trim: 'XSE',
+    mileage: 8900,
+    price: 28995,
+    condition: 'used',
+    bodyType: 'Sedan',
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    exteriorColor: 'Celestial Silver',
+    interiorColor: 'Black',
+    description: 'SOLD - Beautiful Camry XSE with sporty styling and comfortable interior.',
+    features: [
+      'Sport Suspension',
+      'Paddle Shifters',
+      'Toyota Safety Sense',
+      'Wireless CarPlay',
+      'Sunroof',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800',
+    ],
+    status: 'sold',
+    lastSyncedAt: now,
+  })
+
+  // Vehicle 6: 2024 Chevrolet Corvette (PENDING)
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'chevy-001',
+    providerType: 'mock',
+    vin: '1G1YC2D40P5123456',
+    year: 2024,
+    make: 'Chevrolet',
+    model: 'Corvette',
+    trim: 'Stingray 2LT',
+    mileage: 3200,
+    price: 79995,
+    condition: 'used',
+    bodyType: 'Coupe',
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    exteriorColor: 'Rapid Blue',
+    interiorColor: 'Adrenaline Red',
+    description: 'PENDING SALE - Stunning C8 Corvette with magnetic ride control and performance exhaust.',
+    features: [
+      '6.2L V8 Engine',
+      'Magnetic Ride Control',
+      'Performance Exhaust',
+      'Head-Up Display',
+      'Bose Audio',
+      'Carbon Fiber Package',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800',
+    ],
+    status: 'pending',
+    lastSyncedAt: now,
+  })
+
+  // Vehicle 7: 2023 Jeep Wrangler
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'jeep-001',
+    providerType: 'mock',
+    vin: '1C4HJXFG5PW123456',
+    year: 2023,
+    make: 'Jeep',
+    model: 'Wrangler',
+    trim: 'Rubicon',
+    mileage: 15600,
+    price: 47995,
+    condition: 'used',
+    bodyType: 'SUV',
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    exteriorColor: 'Firecracker Red',
+    interiorColor: 'Black',
+    description: 'Off-road ready Wrangler Rubicon with lifted suspension and all-terrain tires.',
+    features: [
+      'Rock-Trac 4WD',
+      'Locking Differentials',
+      'Lifted Suspension',
+      'All-Terrain Tires',
+      'Removable Top',
+      'Alpine Audio',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
+    ],
+    status: 'available',
+    lastSyncedAt: now,
+  })
+
+  // Vehicle 8: 2025 Audi A4
+  upsertVehicle({
+    dealerId,
+    providerConnectionId,
+    providerId: 'audi-001',
+    providerType: 'mock',
+    vin: 'WAUFFAFL8RN123456',
+    year: 2025,
+    make: 'Audi',
+    model: 'A4',
+    trim: 'Premium Plus',
+    mileage: 2100,
+    price: 44995,
+    condition: 'certified',
+    bodyType: 'Sedan',
+    transmission: 'Automatic',
+    fuelType: 'Gasoline',
+    exteriorColor: 'Mythos Black',
+    interiorColor: 'Beige Leather',
+    description: 'Elegant Audi A4 with Quattro AWD and premium technology package. Certified Pre-Owned.',
+    features: [
+      'Quattro AWD',
+      'Virtual Cockpit',
+      'Bang & Olufsen Audio',
+      'Panoramic Sunroof',
+      'Heated Seats',
+      'Navigation Plus',
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
+    ],
+    status: 'available',
+    lastSyncedAt: now,
+  })
+
+  console.log('[Seed] Successfully added 8 test vehicles')
+  console.log('  - 6 available')
+  console.log('  - 1 sold')
+  console.log('  - 1 pending')
+}

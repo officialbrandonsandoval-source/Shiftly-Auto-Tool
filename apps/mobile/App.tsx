@@ -6,6 +6,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { InventoryListScreen } from './src/screens/InventoryListScreen'
 import { VehicleDetailScreen } from './src/screens/VehicleDetailScreen'
 import { ListingExportScreen } from './src/screens/ListingExportScreen'
+import ConnectMarketplaceScreen from './src/screens/ConnectMarketplaceScreen'
+import AnalyticsScreen from './src/screens/AnalyticsScreen'
 import { authAPI } from './src/api/client'
 
 const Stack = createNativeStackNavigator()
@@ -63,6 +65,16 @@ export default function App() {
           name="ListingExport"
           component={ListingExportScreen}
           options={{ title: 'Export Listing' }}
+        />
+        <Stack.Screen
+          name="ConnectMarketplace"
+          component={ConnectMarketplaceScreen}
+          options={{ title: 'Connect Marketplace', headerShown: true }}
+        />
+        <Stack.Screen
+          name="Analytics"
+          component={AnalyticsScreen}
+          options={{ title: 'Analytics Dashboard', headerShown: true }}
         />
       </Stack.Navigator>
       <StatusBar style="auto" />
