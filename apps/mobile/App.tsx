@@ -3,32 +3,45 @@ import { StatusBar } from 'expo-status-bar'
 import { ActivityIndicator, View, StyleSheet } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { LoginScreen } from './src/screens/LoginScreen'
+import { NameSelectScreen } from './src/screens/NameSelectScreen'
 import { InventoryListScreen } from './src/screens/InventoryListScreen'
 import { VehicleDetailScreen } from './src/screens/VehicleDetailScreen'
 import { ListingExportScreen } from './src/screens/ListingExportScreen'
-import { authAPI } from './src/api/client'
+import { setApiKey } from './src/api/client'
+import { getApiKey, getSelectedName } from './src/storage'
+
+type AppPhase = 'loading' | 'login' | 'name-select' | 'dashboard'
 
 const Stack = createNativeStackNavigator()
 
 export default function App() {
-  const [isAuthenticating, setIsAuthenticating] = useState(true)
+  const [phase, setPhase] = useState<AppPhase>('loading')
+  const [apiKey, setApiKeyState] = useState<string | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
 
+  // On mount, check if we already have a saved API key + name
   useEffect(() => {
-    // Auto-login for development
-    const autoLogin = async () => {
-      try {
-        await authAPI.login('dealer@example.com')
-      } catch (err) {
-        console.error('Auto-login failed:', err)
-      } finally {
-        setIsAuthenticating(false)
-      }
-    }
+    ;(async () => {
+      const savedKey = await getApiKey()
+      if (savedKey) {
+        setApiKey(savedKey)
+        setApiKeyState(savedKey)
 
-    autoLogin()
+        const savedName = await getSelectedName()
+        if (savedName) {
+          setUserName(savedName)
+          setPhase('dashboard')
+        } else {
+          setPhase('name-select')
+        }
+      } else {
+        setPhase('login')
+      }
+    })()
   }, [])
 
-  if (isAuthenticating) {
+  if (phase === 'loading') {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
@@ -36,17 +49,43 @@ export default function App() {
     )
   }
 
+  if (phase === 'login') {
+    return (
+      <>
+        <LoginScreen
+          onLoginSuccess={(key) => {
+            setApiKeyState(key)
+            setPhase('name-select')
+          }}
+        />
+        <StatusBar style="auto" />
+      </>
+    )
+  }
+
+  if (phase === 'name-select' && apiKey) {
+    return (
+      <>
+        <NameSelectScreen
+          apiKey={apiKey}
+          onNameSelected={(name) => {
+            setUserName(name)
+            setPhase('dashboard')
+          }}
+        />
+        <StatusBar style="auto" />
+      </>
+    )
+  }
+
+  // Dashboard phase
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: {
-            backgroundColor: '#2563eb',
-          },
+          headerStyle: { backgroundColor: '#2563eb' },
           headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: '600',
-          },
+          headerTitleStyle: { fontWeight: '600' },
         }}
       >
         <Stack.Screen

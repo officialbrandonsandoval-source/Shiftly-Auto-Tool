@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express'
 import cors from 'cors'
-import { generateToken, authMiddleware, apiKeyMiddleware, AuthRequest } from './auth.js'
-import { createApiKey, listApiKeys, revokeApiKey, getApiKey } from './apiKeys.js'
+import { generateToken, authMiddleware, apiKeyMiddleware, combinedAuthMiddleware, AuthRequest } from './auth.js'
+import { createApiKey, listApiKeys, revokeApiKey, getApiKey, validateApiKey } from './apiKeys.js'
 import {
   createProviderConnection,
   getProviderConnection,
@@ -43,6 +43,22 @@ app.post('/auth/login', (req: Request, res: Response) => {
 
   const token = generateToken(email)
   res.json({ token, user: { email } })
+})
+
+// Verify SAG API Key — returns 200 with key metadata if valid, 401 if not
+app.post('/auth/verify-key', (req: Request, res: Response) => {
+  const { apiKey } = req.body
+  if (!apiKey) return res.status(400).json({ error: 'apiKey required' })
+
+  const keyId = validateApiKey(apiKey)
+  if (!keyId) return res.status(401).json({ error: 'Invalid or revoked API key' })
+
+  const keyRecord = getApiKey(keyId)
+  res.json({
+    valid: true,
+    keyId,
+    name: keyRecord?.name ?? null,
+  })
 })
 
 // Protected route: get current user
@@ -182,14 +198,7 @@ app.post('/sync/:connectionId', authMiddleware as any, async (req: AuthRequest, 
 // GET /vehicles: List vehicles (requires JWT or API key)
 app.get(
   '/vehicles',
-  (req: Request, res: Response, next) => {
-    const hasApiKey = req.headers['x-api-key']
-    const hasAuth = req.headers.authorization?.startsWith('Bearer ')
-
-    if (hasApiKey) return apiKeyMiddleware(req as AuthRequest, res, next)
-    if (hasAuth) return authMiddleware(req as AuthRequest, res, next)
-    return res.status(401).json({ error: 'Authentication required' })
-  },
+  combinedAuthMiddleware as any,
   (req: AuthRequest, res: Response) => {
     try {
       const dealerId = req.query.dealerId as string
@@ -212,7 +221,7 @@ app.get(
   }
 )
 
-app.get('/vehicles/:id', authMiddleware as any, (req: AuthRequest, res: Response) => {
+app.get('/vehicles/:id', combinedAuthMiddleware as any, (req: AuthRequest, res: Response) => {
   const { id } = req.params
   try {
     const vehicle = getVehicle(id)
@@ -224,7 +233,7 @@ app.get('/vehicles/:id', authMiddleware as any, (req: AuthRequest, res: Response
   }
 })
 
-app.get('/listing/:vehicleId', authMiddleware as any, (req: AuthRequest, res: Response) => {
+app.get('/listing/:vehicleId', combinedAuthMiddleware as any, (req: AuthRequest, res: Response) => {
   const { vehicleId } = req.params
   try {
     const vehicle = getVehicle(vehicleId)

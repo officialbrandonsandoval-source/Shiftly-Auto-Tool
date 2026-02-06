@@ -40,9 +40,8 @@ export interface VehicleListResponse {
   }
 }
 
-export interface AuthResponse {
-  token: string
-  user: {
-    email: string
-  }
+export interface VerifyKeyResponse {
+  valid: boolean
+  keyId: string
+  name: string | null
 }
