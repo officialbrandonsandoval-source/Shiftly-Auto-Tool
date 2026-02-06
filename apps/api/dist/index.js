@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { generateToken, authMiddleware, apiKeyMiddleware } from './auth.js';
+import authRoutes from './auth/authRoutes.js';
 import { createApiKey, listApiKeys, revokeApiKey, getApiKey } from './apiKeys.js';
 import { createProviderConnection, getProviderConnection, listProviderConnections, revokeProviderConnection, } from './providers.js';
 import { listVehicles, getVehicle, countVehicles } from './vehicles.js';
@@ -30,6 +31,9 @@ app.get('/health', (_req, res) => {
 app.get('/', (_req, res) => {
     res.json({ message: 'PONS Auto API', version: '0.1.0' });
 });
+// V2: Multi-tenant authentication routes (new)
+app.use('/auth/v2', authRoutes);
+// V1: Legacy auth routes (keep for backward compatibility)
 // Auth routes
 app.post('/auth/login', (req, res) => {
     const { email } = req.body;

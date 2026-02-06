@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { generateToken, authMiddleware, apiKeyMiddleware, AuthRequest } from './auth.js'
+import authRoutes from './auth/authRoutes.js'
 import { createApiKey, listApiKeys, revokeApiKey, getApiKey } from './apiKeys.js'
 import {
   createProviderConnection,
@@ -51,6 +52,10 @@ app.get('/', (_req: Request, res: Response) => {
   res.json({ message: 'PONS Auto API', version: '0.1.0' })
 })
 
+// V2: Multi-tenant authentication routes (new)
+app.use('/auth/v2', authRoutes)
+
+// V1: Legacy auth routes (keep for backward compatibility)
 // Auth routes
 app.post('/auth/login', (req: Request, res: Response) => {
   const { email } = req.body

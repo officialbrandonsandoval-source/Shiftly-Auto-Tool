@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { ScrollView, RefreshControl } from 'react-native'
-import { YStack, XStack, Text, Card, H2, H3, Separator, Button, Spinner } from 'tamagui'
-import { useNavigation } from '@react-navigation/native'
+import {
+  ScrollView,
+  RefreshControl,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native'
 import { api } from '../api/client'
 
 interface DealerAnalytics {
@@ -54,6 +59,7 @@ export default function AnalyticsScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'all-time'>('all-time')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadAnalytics()
@@ -62,10 +68,12 @@ export default function AnalyticsScreen() {
   const loadAnalytics = async () => {
     try {
       setLoading(true)
+      setError(null)
       const response = await api.get(`/analytics?period=${period}`)
       setAnalytics(response.data)
     } catch (error) {
       console.error('Failed to load analytics:', error)
+      setError('Failed to load analytics')
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -77,213 +85,276 @@ export default function AnalyticsScreen() {
     await loadAnalytics()
   }
 
-  const getInsightColor = (type: string) => {
-    switch (type) {
-      case 'success':
-        return '$green10'
-      case 'warning':
-        return '$orange10'
-      case 'opportunity':
-        return '$blue10'
-      default:
-        return '$gray10'
-    }
-  }
-
   if (loading && !analytics) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4">
-        <Spinner size="large" />
-        <Text marginTop="$4">Loading analytics...</Text>
-      </YStack>
+      <View style={styles.centered}>
+        <Text style={styles.loadingText}>Loading analytics...</Text>
+      </View>
     )
   }
 
   if (!analytics) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4">
-        <Text>No analytics available</Text>
-        <Button marginTop="$4" onPress={loadAnalytics}>
-          Retry
-        </Button>
-      </YStack>
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{error || 'No analytics available'}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadAnalytics}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
     )
   }
 
   return (
     <ScrollView
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      contentContainerStyle={styles.container}
     >
-      <YStack padding="$4" gap="$4">
-        <H2>Analytics Dashboard</H2>
-
-        {/* Period selector */}
-        <XStack gap="$2" flexWrap="wrap">
+      <View style={styles.card}>
+        <Text style={styles.title}>Analytics Dashboard</Text>
+        <View style={styles.periodRow}>
           {(['daily', 'weekly', 'monthly', 'all-time'] as const).map((p) => (
-            <Button
+            <TouchableOpacity
               key={p}
-              size="$3"
-              variant={period === p ? 'outlined' : 'ghost'}
+              style={[styles.periodButton, period === p && styles.periodButtonActive]}
               onPress={() => setPeriod(p)}
             >
-              {p.charAt(0).toUpperCase() + p.slice(1)}
-            </Button>
+              <Text style={[styles.periodButtonText, period === p && styles.periodButtonTextActive]}>
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </Text>
+            </TouchableOpacity>
           ))}
-        </XStack>
+        </View>
+      </View>
 
-        {/* Key metrics */}
-        <Card padding="$4">
-          <H3 marginBottom="$3">Overview</H3>
-          <YStack gap="$2">
-            <XStack justifyContent="space-between">
-              <Text>Total Posts</Text>
-              <Text fontWeight="bold">{analytics.totalPosts}</Text>
-            </XStack>
-            <XStack justifyContent="space-between">
-              <Text>Active Posts</Text>
-              <Text fontWeight="bold" color="$green10">
-                {analytics.activePosts}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Overview</Text>
+        <View style={styles.metricRow}>
+          <Text>Total Posts</Text>
+          <Text style={styles.metricValue}>{analytics.totalPosts}</Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Text>Active Posts</Text>
+          <Text style={styles.metricValue}>{analytics.activePosts}</Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Text>Impressions</Text>
+          <Text style={styles.metricValue}>{analytics.totalImpressions.toLocaleString()}</Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Text>Clicks</Text>
+          <Text style={styles.metricValue}>{analytics.totalClicks.toLocaleString()}</Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Text>Leads</Text>
+          <Text style={styles.metricValue}>{analytics.totalLeads.toLocaleString()}</Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Text>Conversions</Text>
+          <Text style={styles.metricValue}>{analytics.totalConversions}</Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Text>Click-Through Rate</Text>
+          <Text style={styles.metricValue}>{analytics.clickThroughRate.toFixed(2)}%</Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Text>Conversion Rate</Text>
+          <Text style={styles.metricValue}>{analytics.conversionRate.toFixed(2)}%</Text>
+        </View>
+      </View>
+
+      {analytics.platformBreakdown.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Platform Performance</Text>
+          {analytics.platformBreakdown.map((platform) => (
+            <View key={platform.platform} style={styles.subCard}>
+              <Text style={styles.subTitle}>{platform.platform.replace('_', ' ')}</Text>
+              <View style={styles.metricRow}>
+                <Text>Posts</Text>
+                <Text>{platform.posts}</Text>
+              </View>
+              <View style={styles.metricRow}>
+                <Text>Impressions</Text>
+                <Text>{platform.impressions.toLocaleString()}</Text>
+              </View>
+              <View style={styles.metricRow}>
+                <Text>Clicks</Text>
+                <Text>{platform.clicks.toLocaleString()}</Text>
+              </View>
+              <View style={styles.metricRow}>
+                <Text>CTR</Text>
+                <Text>{platform.ctr.toFixed(2)}%</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {analytics.topPerformers.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Top Performers</Text>
+          {analytics.topPerformers.map((vehicle) => (
+            <View key={vehicle.vehicleId} style={styles.metricRow}>
+              <Text>
+                {vehicle.year} {vehicle.make} {vehicle.model}
               </Text>
-            </XStack>
-            <Separator marginVertical="$2" />
-            <XStack justifyContent="space-between">
-              <Text>Impressions</Text>
-              <Text fontWeight="bold">{analytics.totalImpressions.toLocaleString()}</Text>
-            </XStack>
-            <XStack justifyContent="space-between">
-              <Text>Clicks</Text>
-              <Text fontWeight="bold">{analytics.totalClicks.toLocaleString()}</Text>
-            </XStack>
-            <XStack justifyContent="space-between">
-              <Text>Leads</Text>
-              <Text fontWeight="bold">{analytics.totalLeads.toLocaleString()}</Text>
-            </XStack>
-            <XStack justifyContent="space-between">
-              <Text>Conversions</Text>
-              <Text fontWeight="bold" color="$green10">
-                {analytics.totalConversions}
+              <Text>{vehicle.conversions} conversions</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {analytics.insights.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Insights & Recommendations</Text>
+          {analytics.insights.map((insight, index) => (
+            <View key={index} style={[styles.subCard, getInsightStyle(insight.type)]}>
+              <Text style={styles.subTitle}>{insight.title}</Text>
+              <Text style={styles.bodyText}>{insight.description}</Text>
+              {insight.recommendation && (
+                <Text style={styles.recommendationText}>💡 {insight.recommendation}</Text>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {analytics.underperformers.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Needs Attention</Text>
+          {analytics.underperformers.map((vehicle) => (
+            <View key={vehicle.vehicleId} style={styles.metricRow}>
+              <Text>
+                {vehicle.year} {vehicle.make} {vehicle.model}
               </Text>
-            </XStack>
-            <Separator marginVertical="$2" />
-            <XStack justifyContent="space-between">
-              <Text>Click-Through Rate</Text>
-              <Text fontWeight="bold">{analytics.clickThroughRate.toFixed(2)}%</Text>
-            </XStack>
-            <XStack justifyContent="space-between">
-              <Text>Conversion Rate</Text>
-              <Text fontWeight="bold">{analytics.conversionRate.toFixed(2)}%</Text>
-            </XStack>
-          </YStack>
-        </Card>
-
-        {/* Platform breakdown */}
-        {analytics.platformBreakdown.length > 0 && (
-          <Card padding="$4">
-            <H3 marginBottom="$3">Platform Performance</H3>
-            <YStack gap="$3">
-              {analytics.platformBreakdown.map((platform) => (
-                <YStack key={platform.platform} gap="$2">
-                  <Text fontWeight="bold" textTransform="capitalize">
-                    {platform.platform.replace('_', ' ')}
-                  </Text>
-                  <XStack justifyContent="space-between">
-                    <Text fontSize="$2" color="$gray11">
-                      Posts
-                    </Text>
-                    <Text fontSize="$2">{platform.posts}</Text>
-                  </XStack>
-                  <XStack justifyContent="space-between">
-                    <Text fontSize="$2" color="$gray11">
-                      Impressions
-                    </Text>
-                    <Text fontSize="$2">{platform.impressions.toLocaleString()}</Text>
-                  </XStack>
-                  <XStack justifyContent="space-between">
-                    <Text fontSize="$2" color="$gray11">
-                      Clicks
-                    </Text>
-                    <Text fontSize="$2">{platform.clicks.toLocaleString()}</Text>
-                  </XStack>
-                  <XStack justifyContent="space-between">
-                    <Text fontSize="$2" color="$gray11">
-                      CTR
-                    </Text>
-                    <Text fontSize="$2">{platform.ctr.toFixed(2)}%</Text>
-                  </XStack>
-                  <Separator marginVertical="$1" />
-                </YStack>
-              ))}
-            </YStack>
-          </Card>
-        )}
-
-        {/* Top performers */}
-        {analytics.topPerformers.length > 0 && (
-          <Card padding="$4">
-            <H3 marginBottom="$3">Top Performers</H3>
-            <YStack gap="$2">
-              {analytics.topPerformers.map((vehicle) => (
-                <XStack key={vehicle.vehicleId} justifyContent="space-between">
-                  <Text flex={1}>
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                  </Text>
-                  <Text color="$green10" fontWeight="bold">
-                    {vehicle.conversions} conversions
-                  </Text>
-                </XStack>
-              ))}
-            </YStack>
-          </Card>
-        )}
-
-        {/* Insights */}
-        {analytics.insights.length > 0 && (
-          <Card padding="$4">
-            <H3 marginBottom="$3">Insights & Recommendations</H3>
-            <YStack gap="$3">
-              {analytics.insights.map((insight, index) => (
-                <Card
-                  key={index}
-                  backgroundColor={getInsightColor(insight.type)}
-                  padding="$3"
-                  borderRadius="$4"
-                >
-                  <Text fontWeight="bold" marginBottom="$2">
-                    {insight.title}
-                  </Text>
-                  <Text fontSize="$2" marginBottom="$2">
-                    {insight.description}
-                  </Text>
-                  {insight.recommendation && (
-                    <Text fontSize="$2" fontStyle="italic" color="$gray12">
-                      💡 {insight.recommendation}
-                    </Text>
-                  )}
-                </Card>
-              ))}
-            </YStack>
-          </Card>
-        )}
-
-        {/* Underperformers */}
-        {analytics.underperformers.length > 0 && (
-          <Card padding="$4">
-            <H3 marginBottom="$3">Needs Attention</H3>
-            <YStack gap="$2">
-              {analytics.underperformers.map((vehicle) => (
-                <XStack key={vehicle.vehicleId} justifyContent="space-between">
-                  <Text flex={1}>
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                  </Text>
-                  <Text color="$orange10" fontSize="$2">
-                    {vehicle.clicks} clicks
-                  </Text>
-                </XStack>
-              ))}
-            </YStack>
-          </Card>
-        )}
-      </YStack>
+              <Text>{vehicle.clicks} clicks</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   )
 }
+
+function getInsightStyle(type: string) {
+  switch (type) {
+    case 'success':
+      return styles.insightSuccess
+    case 'warning':
+      return styles.insightWarning
+    case 'opportunity':
+      return styles.insightOpportunity
+    default:
+      return styles.insightInfo
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    paddingBottom: 32,
+    backgroundColor: '#f5f5f5',
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#555',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#b91c1c',
+    marginBottom: 12,
+  },
+  retryButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 12,
+  },
+  subCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#111827',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#111827',
+  },
+  subTitle: {
+    fontWeight: '700',
+    marginBottom: 6,
+    color: '#111827',
+  },
+  bodyText: {
+    color: '#374151',
+  },
+  recommendationText: {
+    marginTop: 6,
+    fontStyle: 'italic',
+    color: '#374151',
+  },
+  periodRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  periodButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#e5e7eb',
+  },
+  periodButtonActive: {
+    backgroundColor: '#2563eb',
+  },
+  periodButtonText: {
+    color: '#374151',
+  },
+  periodButtonTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  metricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  metricValue: {
+    fontWeight: '600',
+  },
+  insightSuccess: {
+    backgroundColor: '#dcfce7',
+  },
+  insightWarning: {
+    backgroundColor: '#ffedd5',
+  },
+  insightOpportunity: {
+    backgroundColor: '#dbeafe',
+  },
+  insightInfo: {
+    backgroundColor: '#f3f4f6',
+  },
+})

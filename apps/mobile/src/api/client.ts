@@ -2,10 +2,14 @@
  * API client for Shiftly Auto Tool backend
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Vehicle, VehicleListResponse, AuthResponse } from '../types'
 
 // In production, use environment variable
-const API_BASE_URL = 'https://pons-api-rm9k.onrender.com'
+// const API_BASE_URL = 'https://pons-api-rm9k.onrender.com'
+const API_BASE_URL = 'http://192.168.3.96:3001'
+
+const AUTH_TOKEN_KEY = 'auth_token'
 
 let authToken: string | null = null
 
@@ -31,6 +35,11 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
+  }
+
+  // Get token from AsyncStorage if not already in memory
+  if (!authToken) {
+    authToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY)
   }
 
   if (authToken) {
