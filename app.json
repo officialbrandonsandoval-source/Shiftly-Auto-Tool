@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "c20b82b6-03f5-4c9e-8020-9c60eb2f5d62"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.bsandoval24.shiftlyautotool",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

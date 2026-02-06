@@ -3,29 +3,37 @@ import { StatusBar } from 'expo-status-bar'
 import { ActivityIndicator, View, StyleSheet } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { LoginScreen } from './src/screens/LoginScreen'
+import { SignupScreen } from './src/screens/SignupScreen'
 import { InventoryListScreen } from './src/screens/InventoryListScreen'
 import { VehicleDetailScreen } from './src/screens/VehicleDetailScreen'
 import { ListingExportScreen } from './src/screens/ListingExportScreen'
-import { authAPI } from './src/api/client'
+import ConnectMarketplaceScreen from './src/screens/ConnectMarketplaceScreen'
+import AnalyticsScreen from './src/screens/AnalyticsScreen'
+import { isLoggedIn } from './src/api/authClient'
 
 const Stack = createNativeStackNavigator()
 
 export default function App() {
   const [isAuthenticating, setIsAuthenticating] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authScreen, setAuthScreen] = useState<'login' | 'signup'>('login')
 
   useEffect(() => {
-    // Auto-login for development
-    const autoLogin = async () => {
+    // Check if user is already logged in
+    const checkAuth = async () => {
       try {
-        await authAPI.login('dealer@example.com')
+        const loggedIn = await isLoggedIn()
+        setIsAuthenticated(loggedIn)
       } catch (err) {
-        console.error('Auto-login failed:', err)
+        console.error('Auth check failed:', err)
+        setIsAuthenticated(false)
       } finally {
         setIsAuthenticating(false)
       }
     }
 
-    autoLogin()
+    checkAuth()
   }, [])
 
   if (isAuthenticating) {
@@ -38,7 +46,40 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
+      {!isAuthenticated ? (
+        // Auth Stack
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animationEnabled: true,
+          }}>
+          {authScreen === 'login' ? (
+            <Stack.Screen
+              name="Login"
+              options={{ animationEnabled: false }}>
+              {() => (
+                <LoginScreen
+                  onLoginSuccess={() => setIsAuthenticated(true)}
+                  onSignupPress={() => setAuthScreen('signup')}
+                />
+              )}
+            </Stack.Screen>
+          ) : (
+            <Stack.Screen
+              name="Signup"
+              options={{ animationEnabled: false }}>
+              {() => (
+                <SignupScreen
+                  onSignupSuccess={() => setIsAuthenticated(true)}
+                  onLoginPress={() => setAuthScreen('login')}
+                />
+              )}
+            </Stack.Screen>
+          )}
+        </Stack.Navigator>
+      ) : (
+        // App Stack
+        <Stack.Navigator
         screenOptions={{
           headerStyle: {
             backgroundColor: '#2563eb',
@@ -64,7 +105,18 @@ export default function App() {
           component={ListingExportScreen}
           options={{ title: 'Export Listing' }}
         />
+        <Stack.Screen
+          name="ConnectMarketplace"
+          component={ConnectMarketplaceScreen}
+          options={{ title: 'Connect Marketplace', headerShown: true }}
+        />
+        <Stack.Screen
+          name="Analytics"
+          component={AnalyticsScreen}
+          options={{ title: 'Analytics Dashboard', headerShown: true }}
+        />
       </Stack.Navigator>
+      )}
       <StatusBar style="auto" />
     </NavigationContainer>
   )

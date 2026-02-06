@@ -1,4 +1,4 @@
-# Error Log — PONS Auto
+# Error Log — Shiftly Auto Tool
 
 ## Rules
 - Every error gets an entry (no exceptions).

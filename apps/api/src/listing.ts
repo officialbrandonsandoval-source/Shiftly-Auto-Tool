@@ -1,9 +1,12 @@
 /**
  * Listing package generator - creates export-ready content from a vehicle
  * Formats vehicle data for posting to classified sites, social, etc.
+ * Includes AI-generated variations with platform-specific optimization
  */
 
 import { Vehicle } from './vehicles.js'
+import { generateListingVariations, ListingVariations, GenerateListingOptions } from './ai/claudeClient.js'
+import crypto from 'crypto'
 
 export interface ListingPackage {
   title: string
@@ -14,6 +17,26 @@ export interface ListingPackage {
   markdown: string // Markdown formatted
   json: string // JSON export
 }
+
+export interface AIGeneratedListing {
+  id: string
+  vehicleId: string
+  facebook: {
+    title: string
+    description: string
+  }
+  craigslist: {
+    title: string
+    description: string
+  }
+  keywords: string[]
+  photoRanking: number[]
+  generatedAt: Date
+  baseListingPackage: ListingPackage
+}
+
+// Cache of generated listings (in production, use DB)
+const generatedListings: Map<string, AIGeneratedListing> = new Map()
 
 /**
  * Generate a listing package from a vehicle
@@ -129,3 +152,60 @@ function formatPrice(price: number): string {
 function formatMileage(mileage: number): string {
   return new Intl.NumberFormat('en-US').format(mileage) + ' miles'
 }
+
+/**
+ * Generate AI-optimized listing variations for a vehicle
+ * Returns platform-specific copy (Facebook, Craigslist) + keywords + photo ranking
+ */
+export async function generateAIListingVariations(vehicle: Vehicle): Promise<AIGeneratedListing> {
+  const basePackage = generateListingPackage(vehicle)
+
+  const claudeOptions: GenerateListingOptions = {
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    price: vehicle.price,
+    mileage: vehicle.mileage,
+    condition: vehicle.condition,
+    description: vehicle.description,
+    features: vehicle.features,
+    transmission: vehicle.transmission,
+    fuelType: vehicle.fuelType,
+    vin: vehicle.vin,
+  }
+
+  // Generate with Claude
+  const variations = await generateListingVariations(claudeOptions)
+
+  const id = crypto.randomUUID()
+  const aiListing: AIGeneratedListing = {
+    id,
+    vehicleId: vehicle.id,
+    facebook: variations.facebook,
+    craigslist: variations.craigslist,
+    keywords: variations.keywords,
+    photoRanking: variations.photoRanking,
+    generatedAt: new Date(),
+    baseListingPackage: basePackage,
+  }
+
+  // Cache it
+  generatedListings.set(id, aiListing)
+
+  return aiListing
+}
+
+/**
+ * Get a previously generated AI listing
+ */
+export function getAIListing(listingId: string): AIGeneratedListing | null {
+  return generatedListings.get(listingId) || null
+}
+
+/**
+ * Get all AI listings for a vehicle
+ */
+export function getAIListingsByVehicle(vehicleId: string): AIGeneratedListing[] {
+  return Array.from(generatedListings.values()).filter((l) => l.vehicleId === vehicleId)
+}
+

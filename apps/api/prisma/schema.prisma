@@ -1,0 +1,213 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== MULTI-TENANT MODELS ====================
+
+model Dealership {
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  apiKey          String    @unique @default(cuid())
+  
+  // Subscription
+  subscriptionTier String   @default("basic") // free, basic, pro, enterprise
+  monthlyPostLimit Int      @default(500)
+  stripeCustomerId String?
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  users           User[]
+  vehicles        Vehicle[]
+  listings        Listing[]
+  posts           Post[]
+  
+  @@index([apiKey])
+}
+
+model User {
+  id                String    @id @default(cuid())
+  dealershipId      String
+  dealership        Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  
+  // Auth
+  email             String
+  password          String?   // Hashed, null if OAuth only
+  name              String
+  
+  // Facebook OAuth
+  facebookId        String?
+  facebookAccessToken String?
+  facebookPageId    String?   // For posting to Marketplace
+  facebookPageName  String?
+  
+  // Permissions
+  role              String    @default("salesperson") // admin, manager, salesperson
+  isActive          Boolean   @default(true)
+  
+  // Metadata
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  posts             Post[]
+  metrics           PostMetric[]
+  
+  @@unique([dealershipId, email])
+  @@index([dealershipId])
+  @@index([facebookId])
+}
+
+// ==================== VEHICLE & LISTING MODELS ====================
+
+model Vehicle {
+  id              String    @id @default(cuid())
+  dealershipId    String
+  dealership      Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  
+  // Vehicle Info
+  year            Int
+  make            String
+  model           String
+  trim            String?
+  vin             String?   @unique
+  mileage         Int
+  price           Float
+  color           String?
+  status          String    @default("available") // available, sold, pending
+  
+  // Images
+  photos          String[]  // URLs to original photos
+  processedPhotos String[]  // URLs to AI-processed photos
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  listings        Listing[]
+  posts           Post[]
+  
+  @@index([dealershipId])
+  @@index([status])
+}
+
+model Listing {
+  id                String    @id @default(cuid())
+  dealershipId      String
+  dealership        Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  
+  vehicleId         String
+  vehicle           Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  // AI Generated Content
+  title             String
+  description       String
+  highlights        String[]  // Array of key features
+  
+  // For Facebook variations
+  facebookTitle     String?
+  facebookDesc      String?
+  
+  // Metadata
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  posts             Post[]
+  
+  @@index([dealershipId])
+  @@index([vehicleId])
+}
+
+// ==================== POSTING MODELS ====================
+
+model Post {
+  id              String    @id @default(cuid())
+  dealershipId    String
+  dealership      Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  vehicleId       String
+  vehicle         Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  listingId       String
+  listing         Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  // Platform
+  platform        String    @default("facebook_marketplace") // facebook_marketplace
+  
+  // Posting Details
+  facebookPostId  String?   @unique
+  status          String    @default("scheduled") // scheduled, posted, failed, removed
+  scheduledFor    DateTime?
+  postedAt        DateTime?
+  
+  // Error Tracking
+  errorMessage    String?
+  retryCount      Int       @default(0)
+  
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  metrics         PostMetric?
+  
+  @@index([dealershipId])
+  @@index([userId])
+  @@index([status])
+  @@index([postedAt])
+}
+
+// ==================== ANALYTICS MODELS ====================
+
+model PostMetric {
+  id              String    @id @default(cuid())
+  postId          String    @unique
+  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Engagement
+  views           Int       @default(0)
+  saves           Int       @default(0)
+  inquiries       Int       @default(0)
+  clickThroughs   Int       @default(0)
+  
+  // Performance
+  timeToFirstInquiry Int?    // minutes
+  
+  // Sync
+  lastSyncedAt    DateTime  @default(now())
+  
+  @@index([userId])
+}
+
+// ==================== AUTH MODELS ====================
+
+model RefreshToken {
+  id              String    @id @default(cuid())
+  userId          String
+  token           String    @unique
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([userId])
+}
