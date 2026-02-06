@@ -2,10 +2,24 @@
  * API client for PONS Auto backend
  */
 
+import Constants from 'expo-constants'
+import { Platform } from 'react-native'
 import { Vehicle, VehicleListResponse, AuthResponse } from '../types'
 
-// In production, use environment variable
-const API_BASE_URL = 'http://localhost:3001'
+function getApiBaseUrl(): string {
+  // Expo dev server exposes the host machine IP via hostUri (e.g. "192.168.1.5:8081")
+  const debuggerHost =
+    Constants.expoConfig?.hostUri ?? Constants.experienceUrl ?? ''
+  const host = debuggerHost.split(':')[0]
+
+  if (host && host !== 'localhost' && Platform.OS !== 'web') {
+    return `http://${host}:3001`
+  }
+
+  return 'http://localhost:3001'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 let authToken: string | null = null
 
