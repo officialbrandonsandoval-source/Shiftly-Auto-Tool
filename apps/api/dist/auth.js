@@ -31,4 +31,14 @@ export function apiKeyMiddleware(req, res, next) {
     req.apiKeyId = apiKeyId;
     next();
 }
+/** Accepts either a Bearer JWT token or an X-API-Key header */
+export function combinedAuthMiddleware(req, res, next) {
+    const hasApiKey = req.headers['x-api-key'];
+    const hasAuth = req.headers.authorization?.startsWith('Bearer ');
+    if (hasApiKey)
+        return apiKeyMiddleware(req, res, next);
+    if (hasAuth)
+        return authMiddleware(req, res, next);
+    return res.status(401).json({ error: 'Authentication required' });
+}
 //# sourceMappingURL=auth.js.map

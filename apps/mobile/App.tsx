@@ -1,72 +1,91 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
-import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { ActivityIndicator, View, StyleSheet } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { LoginScreen } from './src/screens/LoginScreen'
+import { NameSelectScreen } from './src/screens/NameSelectScreen'
 import { InventoryListScreen } from './src/screens/InventoryListScreen'
 import { VehicleDetailScreen } from './src/screens/VehicleDetailScreen'
 import { ListingExportScreen } from './src/screens/ListingExportScreen'
-import { authAPI } from './src/api/client'
+import { setApiKey } from './src/api/client'
+import { getApiKey, getSelectedName } from './src/storage'
+
+type AppPhase = 'loading' | 'login' | 'name-select' | 'dashboard'
 
 const Stack = createNativeStackNavigator()
 
 export default function App() {
-  const [isAuthenticating, setIsAuthenticating] = useState(true)
-  const [authError, setAuthError] = useState<string | null>(null)
+  const [phase, setPhase] = useState<AppPhase>('loading')
+  const [apiKey, setApiKeyState] = useState<string | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
 
-  const autoLogin = useCallback(async () => {
-    setIsAuthenticating(true)
-    setAuthError(null)
-    try {
-      await authAPI.login('dealer@example.com')
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      console.error('Auto-login failed:', message)
-      setAuthError(`Could not connect to API server: ${message}`)
-    } finally {
-      setIsAuthenticating(false)
-    }
+  // On mount, check if we already have a saved API key + name
+  useEffect(() => {
+    ;(async () => {
+      const savedKey = await getApiKey()
+      if (savedKey) {
+        setApiKey(savedKey)
+        setApiKeyState(savedKey)
+
+        const savedName = await getSelectedName()
+        if (savedName) {
+          setUserName(savedName)
+          setPhase('dashboard')
+        } else {
+          setPhase('name-select')
+        }
+      } else {
+        setPhase('login')
+      }
+    })()
   }, [])
 
-  useEffect(() => {
-    autoLogin()
-  }, [autoLogin])
-
-  if (isAuthenticating) {
+  if (phase === 'loading') {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Signing in...</Text>
       </View>
     )
   }
 
-  if (authError) {
+  if (phase === 'login') {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>Login Failed</Text>
-        <Text style={styles.errorText}>{authError}</Text>
-        <Text style={styles.hintText}>
-          Make sure the API server is running:{'\n'}pnpm -C apps/api dev
-        </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={autoLogin}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <>
+        <LoginScreen
+          onLoginSuccess={(key) => {
+            setApiKeyState(key)
+            setPhase('name-select')
+          }}
+        />
+        <StatusBar style="auto" />
+      </>
     )
   }
 
+  if (phase === 'name-select' && apiKey) {
+    return (
+      <>
+        <NameSelectScreen
+          apiKey={apiKey}
+          onNameSelected={(name) => {
+            setUserName(name)
+            setPhase('dashboard')
+          }}
+        />
+        <StatusBar style="auto" />
+      </>
+    )
+  }
+
+  // Dashboard phase
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: {
-            backgroundColor: '#2563eb',
-          },
+          headerStyle: { backgroundColor: '#2563eb' },
           headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: '600',
-          },
+          headerTitleStyle: { fontWeight: '600' },
         }}
       >
         <Stack.Screen
@@ -96,47 +115,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 24,
-  },
-  errorTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#dc2626',
-    marginBottom: 12,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  hintText: {
-    fontSize: 13,
-    color: '#999',
-    textAlign: 'center',
-    marginBottom: 24,
-    fontFamily: 'monospace',
-  },
-  retryButton: {
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
 })

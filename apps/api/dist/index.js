@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { generateToken, authMiddleware, apiKeyMiddleware } from './auth.js';
-import { createApiKey, listApiKeys, revokeApiKey, getApiKey } from './apiKeys.js';
+import { generateToken, authMiddleware, combinedAuthMiddleware } from './auth.js';
+import { createApiKey, listApiKeys, revokeApiKey, getApiKey, validateApiKey } from './apiKeys.js';
 import { createProviderConnection, getProviderConnection, listProviderConnections, revokeProviderConnection, } from './providers.js';
 import { listVehicles, getVehicle, countVehicles } from './vehicles.js';
 import { syncProviderConnection, getAdapter } from './sync.js';
@@ -31,6 +31,21 @@ app.post('/auth/login', (req, res) => {
         return res.status(400).json({ error: 'Email required' });
     const token = generateToken(email);
     res.json({ token, user: { email } });
+});
+// Verify SAG API Key — returns 200 with key metadata if valid, 401 if not
+app.post('/auth/verify-key', (req, res) => {
+    const { apiKey } = req.body;
+    if (!apiKey)
+        return res.status(400).json({ error: 'apiKey required' });
+    const keyId = validateApiKey(apiKey);
+    if (!keyId)
+        return res.status(401).json({ error: 'Invalid or revoked API key' });
+    const keyRecord = getApiKey(keyId);
+    res.json({
+        valid: true,
+        keyId,
+        name: keyRecord?.name ?? null,
+    });
 });
 // Protected route: get current user
 app.get('/me', authMiddleware, (req, res) => {
@@ -159,15 +174,7 @@ app.post('/sync/:connectionId', authMiddleware, async (req, res) => {
     }
 });
 // GET /vehicles: List vehicles (requires JWT or API key)
-app.get('/vehicles', (req, res, next) => {
-    const hasApiKey = req.headers['x-api-key'];
-    const hasAuth = req.headers.authorization?.startsWith('Bearer ');
-    if (hasApiKey)
-        return apiKeyMiddleware(req, res, next);
-    if (hasAuth)
-        return authMiddleware(req, res, next);
-    return res.status(401).json({ error: 'Authentication required' });
-}, (req, res) => {
+app.get('/vehicles', combinedAuthMiddleware, (req, res) => {
     try {
         const dealerId = req.query.dealerId;
         const query = req.query.query;
@@ -186,7 +193,7 @@ app.get('/vehicles', (req, res, next) => {
         res.status(500).json({ error: 'Failed to list vehicles' });
     }
 });
-app.get('/vehicles/:id', authMiddleware, (req, res) => {
+app.get('/vehicles/:id', combinedAuthMiddleware, (req, res) => {
     const { id } = req.params;
     try {
         const vehicle = getVehicle(id);
@@ -199,7 +206,7 @@ app.get('/vehicles/:id', authMiddleware, (req, res) => {
         res.status(500).json({ error: 'Failed to get vehicle' });
     }
 });
-app.get('/listing/:vehicleId', authMiddleware, (req, res) => {
+app.get('/listing/:vehicleId', combinedAuthMiddleware, (req, res) => {
     const { vehicleId } = req.params;
     try {
         const vehicle = getVehicle(vehicleId);

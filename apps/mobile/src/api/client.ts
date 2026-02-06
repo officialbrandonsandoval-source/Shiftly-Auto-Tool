@@ -1,13 +1,13 @@
 /**
  * API client for PONS Auto backend
+ * Authenticates via SAG API Key (X-API-Key header)
  */
 
 import Constants from 'expo-constants'
 import { Platform } from 'react-native'
-import { Vehicle, VehicleListResponse, AuthResponse } from '../types'
+import { Vehicle, VehicleListResponse } from '../types'
 
 function getApiBaseUrl(): string {
-  // Expo dev server exposes the host machine IP via hostUri (e.g. "192.168.1.5:8081")
   const debuggerHost =
     Constants.expoConfig?.hostUri ?? Constants.experienceUrl ?? ''
   const host = debuggerHost.split(':')[0]
@@ -21,7 +21,19 @@ function getApiBaseUrl(): string {
 
 const API_BASE_URL = getApiBaseUrl()
 
-let authToken: string | null = null
+let currentApiKey: string | null = null
+
+export function setApiKey(key: string) {
+  currentApiKey = key
+}
+
+export function clearApiKey() {
+  currentApiKey = null
+}
+
+export function getActiveApiKey(): string | null {
+  return currentApiKey
+}
 
 export interface ListingPackage {
   title: string
@@ -33,12 +45,10 @@ export interface ListingPackage {
   json: string
 }
 
-export function setAuthToken(token: string) {
-  authToken = token
-}
-
-export function clearAuthToken() {
-  authToken = null
+export interface VerifyKeyResponse {
+  valid: boolean
+  keyId: string
+  name: string | null
 }
 
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -47,8 +57,8 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
     ...(options.headers as Record<string, string>),
   }
 
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`
+  if (currentApiKey) {
+    headers['X-API-Key'] = currentApiKey
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -65,15 +75,15 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
 }
 
 /**
- * Auth API
+ * Auth API — verify SAG API Key
  */
 export const authAPI = {
-  async login(email: string): Promise<AuthResponse> {
-    const response = await fetchAPI<AuthResponse>('/auth/login', {
+  async verifyKey(apiKey: string): Promise<VerifyKeyResponse> {
+    const response = await fetchAPI<VerifyKeyResponse>('/auth/verify-key', {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ apiKey }),
     })
-    setAuthToken(response.token)
+    setApiKey(apiKey)
     return response
   },
 }
